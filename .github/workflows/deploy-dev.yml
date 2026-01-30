@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Write SSH key
+      - name: Create SSH key
         run: |
           echo "${{ secrets.DEV_SSH_KEY }}" > key.pem
           chmod 600 key.pem
@@ -23,7 +23,7 @@ jobs:
           -i key.pem \
           ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST }} << 'EOF'
 
-          cd advanced-cicd-devops-project
+          cd advanced-cicd-devops-project || exit
 
           git pull
 
