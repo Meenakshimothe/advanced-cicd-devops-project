@@ -1,0 +1,36 @@
+name: Deploy to DEV
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create SSH key
+        run: |
+          echo "${{ secrets.DEV_SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+          -i key.pem \
+          ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST }} << 'EOF'
+
+          cd advanced-cicd-devops-project || exit
+
+          git pull
+
+          docker stop cicd-app || true
+          docker rm cicd-app || true
+
+          docker build -t cicd-app -f docker/Dockerfile .
+          docker run -d -p 5000:5000 --name cicd-app cicd-app
+
+          EOF
